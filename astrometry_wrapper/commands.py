@@ -62,7 +62,7 @@ def _check_installation():
         import sys
         sys.exit(1)
 
-def solve_field(path, **options):
+def solve_field(path, stdout=None, stderr=None, **options):
     """ Do astrometry on a FITS image using a local build of Astrometry.net.
 
     Use a local build of the Astrometry.net software [1] in order to compute
@@ -80,6 +80,11 @@ def solve_field(path, **options):
     index files [3], which are considerably heavy. At the time of this writing,
     the entire set of indexes built from the 2MASS catalog [4] has a total size
     of ~32 gigabytes.
+
+    'stdout' and 'stderr' specify solve-field's standard output and error file
+    handles, respectively. With the default setting of None, no redirection
+    will occur; the child's file handles will be inherited from the parent.
+    Both parameters can take any of the values allowed by subprocess.Popen().
 
     [1] http://astrometry.net/
     [2] http://astrometry.net/doc/build.html
@@ -129,7 +134,7 @@ def solve_field(path, **options):
         args += ["{0}{1}".format(ndashes * '-', key), str(value)]
 
     try:
-        subprocess.check_call(args)
+        subprocess.check_call(args, stdout=stdout, stderr=stderr)
 
         # .solved file must exist and contain a binary one
         with open(solved_file, 'rb') as fd:
