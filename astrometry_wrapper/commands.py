@@ -62,14 +62,16 @@ def _check_installation():
         import sys
         sys.exit(1)
 
-def solve_field(path):
+def solve_field(path, **options):
     """ Do astrometry on a FITS image using a local build of Astrometry.net.
 
     Use a local build of the Astrometry.net software [1] in order to compute
     the astrometric solution of a FITS image. Returns the path to a temporary
     file containing a copy of the input FITS image with the WCS solution. If
-    Astrometry.net is unable so solve the image, AstrometryNetUnsolvedField
-    is raised.
+    Astrometry.net is unable so solve the image, AstrometryNetUnsolvedField is
+    raised. Keyword arguments are passed down to 'solve-field', with one or two
+    dashes automatically affixed to them as needed. For example, extension=3
+    translates to --extension=3 in the call to 'solve-field'.
 
     In order for this function to work, you must have built and installed the
     Astrometry.net code in your machine [2]. The main high-level command-line
@@ -116,6 +118,16 @@ def solve_field(path):
             '--new-fits', output_path,
             '--no-fits2fits',
             '--overwrite']
+
+    # Pass down keyword arguments as options to solve-field. For example, 'w' =
+    # 681 results into two additional arguments to check_call(): '-w' (note the
+    # dash at the beginning and '681' (as all arguments must be strings). Long
+    # options use two dashes.
+
+    for key, value in options.items():
+        print(key, value)
+        ndashes = 1 if len(key) == 1 else 2
+        args += ["{0}{1}".format(ndashes * '-', key), str(value)]
 
     try:
         subprocess.check_call(args)
