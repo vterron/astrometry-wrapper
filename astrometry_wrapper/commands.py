@@ -125,7 +125,6 @@ def solve_field(path, **options):
     # options use two dashes.
 
     for key, value in options.items():
-        print(key, value)
         ndashes = 1 if len(key) == 1 else 2
         args += ["{0}{1}".format(ndashes * '-', key), str(value)]
 
