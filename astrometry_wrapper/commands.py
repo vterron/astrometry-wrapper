@@ -153,7 +153,7 @@ def image2xy(path):
     root, _ = os.path.splitext(basename)
 
     # Path to the temporary FITS binary table with the detected sources
-    kwargs = dict(prefix = '{0}_sources'.format(root), suffix = '.fits')
+    kwargs = dict(prefix = '{0}_sources_'.format(root), suffix = '.fits')
     with tempfile.NamedTemporaryFile(**kwargs) as fd:
         output_path = fd.name
 
