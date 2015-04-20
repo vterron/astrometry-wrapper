@@ -145,3 +145,18 @@ def solve_field(path, **options):
         raise AstrometryNetUnsolvedField(path)
     finally:
         shutil.rmtree(output_dir)
+
+def image2xy(path):
+    """ Find objects and write out X, Y and FLUX to a FITS binary table."""
+
+    basename = os.path.basename(path)
+    root, _ = os.path.splitext(basename)
+
+    # Path to the temporary FITS binary table with the detected sources
+    kwargs = dict(prefix = '{0}_sources'.format(root), suffix = '.fits')
+    with tempfile.NamedTemporaryFile(**kwargs) as fd:
+        output_path = fd.name
+
+    args = ['image2xy', path, '-o', output_path]
+    subprocess.check_output(args)
+    return output_path
