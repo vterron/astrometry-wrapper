@@ -5,6 +5,8 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+import os
+
 from . import commands
 
 def find_sources(path, type = 'fits'):
@@ -32,3 +34,17 @@ def find_sources(path, type = 'fits'):
 
     finally:
         os.unlink(sources_table)
+
+def solve(path):
+    """ A convenience function to solve images without thinking.
+
+    This is a convenience wrapper around solve-field, Astrometry.net's main
+    high-level command-line user interface. There are no parameters to tweak,
+    neither nothing written to standard output or error: Astrometry.net just
+    runs silently, returning the path to a temporary copy of the input image
+    with the WCS solution added to its FITS header.
+
+    """
+
+    with open(os.devnull, 'wb') as fd:
+        return commands.solve_field(path, stdout=fd, stderr=fd)
