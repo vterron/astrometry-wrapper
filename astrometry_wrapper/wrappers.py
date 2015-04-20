@@ -6,7 +6,12 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from astropy.io import fits
+from astropy.coordinates import SkyCoord
+from astropy import units
+
+import functools
 import os
+import re
 import warnings
 
 from . import commands
@@ -37,13 +42,27 @@ def find_sources(path, type = 'fits'):
     finally:
         os.unlink(sources_table)
 
-def _get_ra(header, rak):
-    """ Read the right ascension (in decimal degrees) """
-    return header[rak]
+def _get_coordinates(header, rak, deck):
+    """ Read the celestial coordinates from a FITS header.
 
-def _get_dec(header, deck):
-    """ Read the declination (in decimal degrees) """
-    return header[deck]
+    Return an astropy.coordinates.SkyCoord object with the right ascension and
+    declination read from the specified FITS keywords. If both coordinates are
+    not in decimal degrees, they are assumed to be in sexagesimal (hour angles
+    and degrees, respectively).
+
+    """
+
+    ra  = str(header[rak])
+    dec = str(header[deck])
+    coords = functools.partial(SkyCoord, ra, dec)
+
+    regexp = "\d{1,3}\.?\d"
+    match_degrees = functools.partial(re.match, regexp)
+    if match_degrees(ra) and match_degrees(dec):
+        return coords(unit=(units.deg, units.deg))
+
+    # Assume (at least for now) that it's in sexagesimal
+    return coords(unit=(units.hourangle, units.deg))
 
 def solve(path, rak = 'RA', deck = 'DEC', radius = 1):
     """ A convenience function to solve images without thinking.
@@ -71,8 +90,9 @@ def solve(path, rak = 'RA', deck = 'DEC', radius = 1):
         header = hdulist[0].header
 
         try:
-            options['ra']  = _get_ra (header, rak)
-            options['dec'] = _get_dec(header, deck)
+            coords = _get_coordinates(header, rak, deck)
+            options['ra']  = coords.ra.degree
+            options['dec'] = coords.dec.degree
             options['radius'] = radius
 
         except KeyError as e:
