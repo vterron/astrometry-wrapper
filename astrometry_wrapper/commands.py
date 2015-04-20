@@ -9,6 +9,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import textwrap
 
 ASTROMETRY_COMMAND = 'solve-field'
 
@@ -20,6 +21,46 @@ class AstrometryNetUnsolvedField(subprocess.CalledProcessError):
 
     def __str__(self):
         return "{0}: could not solve field".format(self.path)
+
+def _check_installation():
+    """ Check whether Astrometry.net is installed. """
+
+    kwargs = dict(
+        initial_indent=" " * 11,
+        subsequent_indent=" " * 11,
+        width=72
+        )
+
+    error_wrap = textwrap.TextWrapper(**kwargs)
+
+    ASTROMETRY_MISSING = """
+    ERROR: Astrometry.net commands could not be found.
+
+    In order to use the astrometry_wrapper module, you will first need to
+    download, build and install the Astrometry.net software from:
+
+        http://astrometry.net/
+
+    and ensure that the Astrometry.net commands (e.g. solve-field, backend,
+    augment-xylist, etc.) are in your $PATH. Your current $PATH variable
+    contains the following paths, but none of them contain the Astrometry.net
+    commands:
+
+        PATH = {path}
+
+    If the Astrometry.net commands are in one of these directories, then please
+    report this as an issue with astrometry-wrapper.
+    """.format(path=error_wrap.fill(os.environ['PATH']).strip())
+
+    for dir_ in os.environ['PATH'].split(':'):
+        if os.path.exists(dir_ + '/solve-field'):
+            installed = True
+            break
+
+    else:
+        print(ASTROMETRY_MISSING)
+        import sys
+        sys.exit(1)
 
 def solve_field(path):
     """ Do astrometry on a FITS image using a local build of Astrometry.net.
@@ -44,6 +85,8 @@ def solve_field(path):
     [4] http://data.astrometry.net/4200/
 
     """
+
+    _check_installation()
 
     basename = os.path.basename(path)
     root, ext = os.path.splitext(basename)
