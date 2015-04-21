@@ -5,6 +5,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+import functools
 import os
 import shutil
 import subprocess
@@ -22,8 +23,8 @@ class AstrometryNetUnsolvedField(subprocess.CalledProcessError):
     def __str__(self):
         return "{0}: could not solve field".format(self.path)
 
-def _check_installation():
-    """ Check whether Astrometry.net is installed. """
+def _check_installation(func):
+    """ A decorator to check whether Astrometry.net is installed. """
 
     kwargs = dict(
         initial_indent=" " * 11,
@@ -52,16 +53,21 @@ def _check_installation():
     report this as an issue with astrometry-wrapper.
     """.format(path=error_wrap.fill(os.environ['PATH']).strip())
 
-    for dir_ in os.environ['PATH'].split(':'):
-        if os.path.exists(dir_ + '/solve-field'):
-            installed = True
-            break
+    @functools.wraps(func)
+    def wrapped(*args, **kwargs):
 
-    else:
+        for dir_ in os.environ['PATH'].split(':'):
+            if os.path.exists(os.path.join(dir_, ASTROMETRY_COMMAND)):
+                return func(*args, **kwargs)
+
+        # Command not found in PATH
         print(ASTROMETRY_MISSING)
         import sys
         sys.exit(1)
 
+    return wrapped
+
+@_check_installation
 def solve_field(path, stdout=None, stderr=None, **options):
     """ Do astrometry on a FITS image using a local build of Astrometry.net.
 
@@ -92,8 +98,6 @@ def solve_field(path, stdout=None, stderr=None, **options):
     [4] http://data.astrometry.net/4200/
 
     """
-
-    _check_installation()
 
     basename = os.path.basename(path)
     root, ext = os.path.splitext(basename)
