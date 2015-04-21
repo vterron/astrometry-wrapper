@@ -105,7 +105,7 @@ def solve(path, rak = 'RA', deck = 'DEC', radius = 1):
 
     if None not in (rak, deck):
 
-        log.info("Figuring our field center coordinates")
+        log.info("Figuring out field center coordinates")
         hdulist = fits.open(path)
         header = hdulist[0].header
 
