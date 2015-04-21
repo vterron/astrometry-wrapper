@@ -121,11 +121,14 @@ def solve_field(path, stdout=None, stderr=None, **options):
     # Pass down keyword arguments as options to solve-field. For example, 'w' =
     # 681 results into two additional arguments to check_call(): '-w' (note the
     # dash at the beginning and '681' (as all arguments must be strings). Long
-    # options use two dashes.
+    # options use two dashes. If a value is None, it is ignored (useful for
+    # options such as -v, without an associated value).
 
     for key, value in options.items():
         ndashes = 1 if len(key) == 1 else 2
-        args += ["{0}{1}".format(ndashes * '-', key), str(value)]
+        args.append("{0}{1}".format(ndashes * '-', key))
+        if value is not None:
+            args.append(str(value))
 
     try:
         subprocess.check_call(args, stdout=stdout, stderr=stderr)
