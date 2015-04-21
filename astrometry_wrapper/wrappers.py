@@ -12,6 +12,7 @@ from astropy import units
 import functools
 import os
 import re
+import tempfile
 import warnings
 
 from . import commands
@@ -82,7 +83,24 @@ def solve(path, rak = 'RA', deck = 'DEC', radius = 1):
 
     """
 
-    options = dict()
+    # Path to the temporary FITS file containing the WCS header
+    basename = os.path.basename(path)
+    root, ext = os.path.splitext(basename)
+    kwargs = dict(prefix = '{0}_astrometry_'.format(root), suffix = ext)
+    with tempfile.NamedTemporaryFile(**kwargs) as fd:
+        output_path = fd.name
+
+    # --no-plots: don't create any plots of the results.
+    # --new-fits: the new FITS file containing the WCS header.
+    # --no-fits2fits: don't sanitize FITS files; assume they're already valid.
+    # --overwrite: overwrite output files if they already exist.
+
+    options = {
+        'no-plot' : None,
+        'new-fits' : output_path,
+        'no-fits2fits' : None,
+        'overwrite' : None,
+        }
 
     if None not in (rak, deck):
 
@@ -91,19 +109,20 @@ def solve(path, rak = 'RA', deck = 'DEC', radius = 1):
 
         try:
             coords = _get_coordinates(header, rak, deck)
-            options['ra']  = coords.ra.degree
-            options['dec'] = coords.dec.degree
-            options['radius'] = radius
-
         except KeyError as e:
-            options.clear()
             msg = ("{0}: could not read field center coordinates from FITS "
                    "header ({1}); solve-field will run blindly".format(
                        path, str(e)))
             warnings.warn(msg)
+        else:
+            options['ra']  = coords.ra.degree
+            options['dec'] = coords.dec.degree
+            options['radius'] = radius
 
     with open(os.devnull, 'wb') as fd:
-        return commands.solve_field(path,
-                                    stdout=fd,
-                                    stderr=fd,
-                                    **options)
+        output_dir = commands.solve_field(path,
+                                          stdout=fd,
+                                          stderr=fd,
+                                          **options)
+    shutil.rmtree(output_dir)
+    return output_path
