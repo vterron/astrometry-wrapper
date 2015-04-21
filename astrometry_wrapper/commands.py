@@ -155,6 +155,7 @@ def solve_field(path, stdout=None, stderr=None, **options):
     finally:
         shutil.rmtree(output_dir)
 
+@_check_installation
 def image2xy(path):
     """ Find objects and write out X, Y and FLUX to a FITS binary table."""
 
