@@ -5,6 +5,7 @@ from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+from astropy import log
 from astropy.io import fits
 from astropy.coordinates import SkyCoord
 from astropy import units
@@ -120,9 +121,12 @@ def solve(path, rak = 'RA', deck = 'DEC', radius = 1):
             options['radius'] = radius
 
     with open(os.devnull, 'wb') as fd:
+        log.info("Running {0}".format(commands.ASTROMETRY_COMMAND))
         output_dir = commands.solve_field(path,
                                           stdout=fd,
                                           stderr=fd,
                                           **options)
+
+    log.info("Removing working directory")
     shutil.rmtree(output_dir)
     return output_path
