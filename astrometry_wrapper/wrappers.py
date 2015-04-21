@@ -13,6 +13,7 @@ from astropy import units
 import functools
 import os
 import re
+import shutil
 import tempfile
 import warnings
 
