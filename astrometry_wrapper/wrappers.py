@@ -15,7 +15,6 @@ import os
 import re
 import shutil
 import tempfile
-import warnings
 
 from . import commands
 
@@ -106,16 +105,16 @@ def solve(path, rak = 'RA', deck = 'DEC', radius = 1):
 
     if None not in (rak, deck):
 
+        log.info("Figuring our field center coordinates")
         hdulist = fits.open(path)
         header = hdulist[0].header
 
         try:
             coords = _get_coordinates(header, rak, deck)
         except KeyError as e:
-            msg = ("{0}: could not read field center coordinates from FITS "
-                   "header ({1}); solve-field will run blindly".format(
-                       path, str(e)))
-            warnings.warn(msg)
+            log.warn("Cannot understand coordinates in FITS header")
+            log.warn("Astrometry.net will try to solve the image blindly")
+
         else:
             options['ra']  = coords.ra.degree
             options['dec'] = coords.dec.degree
