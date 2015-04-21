@@ -138,7 +138,7 @@ def solve_field(path, stdout=None, stderr=None, **options):
             if ord(fd.read()) != 1:
                 raise AstrometryNetUnsolvedField(path)
 
-        return output_path
+        return output_dir
 
     except subprocess.CalledProcessError as e:
         shutil.rmtree(output_dir)
